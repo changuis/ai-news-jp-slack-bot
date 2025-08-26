@@ -19,7 +19,7 @@ sys.path.append(str(Path(__file__).parent / 'src'))
 from health_check import start_health_check, stop_health_check
 
 from src.utils.config import load_config, setup_logging, create_example_config
-from src.database.models import DatabaseManager
+from src.database.models import DatabaseManager, Source
 from src.collectors.rss_collector import RSSCollector
 from src.processors.summarizer import ArticleSummarizer, TagGenerator
 from src.slack.bot import AINewsSlackBot
@@ -44,6 +44,9 @@ class AINewsBot:
         db_path = self.config['database']['path']
         self.db = DatabaseManager(db_path)
         
+        # CRITICAL: Populate sources from configuration
+        self.populate_sources_from_config()
+        
         self.summarizer = ArticleSummarizer(self.config)
         self.tag_generator = TagGenerator(self.config)
         self.slack_bot = AINewsSlackBot(self.config, self.db)
@@ -53,6 +56,47 @@ class AINewsBot:
         self.scheduler = BlockingScheduler(timezone=pytz.timezone(timezone))
         
         logger.info("AI News Bot initialized successfully")
+    
+    def populate_sources_from_config(self):
+        """Populate database with sources from configuration"""
+        logger.info("Populating database with sources from configuration...")
+        
+        sources_config = self.config.get('sources', {})
+        
+        for language, lang_sources in sources_config.items():
+            # Process RSS feeds
+            rss_feeds = lang_sources.get('rss_feeds', [])
+            for feed_config in rss_feeds:
+                source = Source(
+                    name=feed_config['name'],
+                    url=feed_config['url'],
+                    source_type='rss',
+                    language=language,
+                    enabled=feed_config.get('enabled', True),
+                    tags=feed_config.get('tags', []),
+                    config=feed_config
+                )
+                self.db.save_source(source)
+                logger.info(f"Added RSS source: {source.name}")
+            
+            # Process websites
+            websites = lang_sources.get('websites', [])
+            for website_config in websites:
+                source = Source(
+                    name=website_config['name'],
+                    url=website_config['url'],
+                    source_type='website',
+                    language=language,
+                    enabled=website_config.get('enabled', True),
+                    tags=website_config.get('tags', []),
+                    config=website_config
+                )
+                self.db.save_source(source)
+                logger.info(f"Added website source: {source.name}")
+        
+        # Count total sources
+        total_sources = self.db.get_sources(enabled_only=False)
+        logger.info(f"Database now contains {len(total_sources)} sources")
     
     def collect_news(self, language: str = None, source_name: str = None):
         """Collect news from configured sources"""
