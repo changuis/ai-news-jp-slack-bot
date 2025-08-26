@@ -12,7 +12,30 @@ logger = logging.getLogger(__name__)
 
 
 def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
-    """Load configuration from YAML file"""
+    """Load configuration from CONFIG_YAML environment variable or YAML file"""
+    
+    # First, try to load from CONFIG_YAML environment variable (Railway deployment)
+    config_yaml_env = os.getenv('CONFIG_YAML')
+    if config_yaml_env:
+        try:
+            config = yaml.safe_load(config_yaml_env)
+            logger.info("Configuration loaded from CONFIG_YAML environment variable")
+            
+            # Validate required sections
+            validate_config(config)
+            
+            # Apply environment variable overrides
+            config = apply_env_overrides(config)
+            
+            return config
+            
+        except yaml.YAMLError as e:
+            raise ValueError(f"Invalid YAML in CONFIG_YAML environment variable: {e}")
+        except Exception as e:
+            logger.warning(f"Failed to load from CONFIG_YAML environment variable: {e}")
+            # Fall back to file-based loading
+    
+    # Fall back to file-based configuration loading
     if config_path is None:
         # Try to find config file
         possible_paths = [
@@ -32,8 +55,9 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
         
         if config_path is None:
             raise FileNotFoundError(
-                "Configuration file not found. Please create config/config.yaml "
-                "from config/config.example.yaml"
+                "Configuration not found. Please either:\n"
+                "1. Set CONFIG_YAML environment variable with YAML configuration, or\n"
+                "2. Create config/config.yaml from config/config.example.yaml"
             )
     
     try:
@@ -46,7 +70,7 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
         # Apply environment variable overrides
         config = apply_env_overrides(config)
         
-        logger.info(f"Configuration loaded from: {config_path}")
+        logger.info(f"Configuration loaded from file: {config_path}")
         return config
         
     except yaml.YAMLError as e:

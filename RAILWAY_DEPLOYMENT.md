@@ -163,6 +163,7 @@ In Railway dashboard:
 3. Add these variables:
 
 ```
+CONFIG_YAML=[Copy entire config/config.example.yaml content here]
 SLACK_BOT_TOKEN=xoxb-your-actual-bot-token-here
 SLACK_APP_TOKEN=xapp-your-actual-app-token-here
 OPENAI_API_KEY=sk-your-actual-openai-key-here
@@ -170,6 +171,8 @@ DATABASE_PATH=/app/data/ai_news_jp.db
 TZ=Asia/Tokyo
 PYTHONPATH=/app
 ```
+
+**Important**: For the `CONFIG_YAML` variable, copy the entire YAML configuration from your `config/config.example.yaml` file. The bot will read this configuration directly from the environment variable instead of looking for a config file.
 
 ### 4.2 Deploy with Environment Variables
 
