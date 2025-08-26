@@ -4,6 +4,7 @@ Configuration management utilities
 
 import os
 import yaml
+import json
 from pathlib import Path
 from typing import Dict, Any, Optional
 import logging
@@ -12,9 +13,30 @@ logger = logging.getLogger(__name__)
 
 
 def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
-    """Load configuration from CONFIG_YAML environment variable or YAML file"""
+    """Load configuration from environment variables or YAML file"""
     
-    # First, try to load from CONFIG_YAML environment variable (Railway deployment)
+    # First, try to load from CONFIG_JSON environment variable (Railway deployment - preferred)
+    config_json_env = os.getenv('CONFIG_JSON')
+    if config_json_env:
+        try:
+            config = json.loads(config_json_env)
+            logger.info("Configuration loaded from CONFIG_JSON environment variable")
+            
+            # Validate required sections
+            validate_config(config)
+            
+            # Apply environment variable overrides
+            config = apply_env_overrides(config)
+            
+            return config
+            
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON in CONFIG_JSON environment variable: {e}")
+        except Exception as e:
+            logger.warning(f"Failed to load from CONFIG_JSON environment variable: {e}")
+            # Fall back to CONFIG_YAML
+    
+    # Second, try to load from CONFIG_YAML environment variable (fallback)
     config_yaml_env = os.getenv('CONFIG_YAML')
     if config_yaml_env:
         try:
