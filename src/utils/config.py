@@ -18,7 +18,19 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     config_yaml_env = os.getenv('CONFIG_YAML')
     if config_yaml_env:
         try:
-            config = yaml.safe_load(config_yaml_env)
+            # Handle quoted strings from Railway environment variables
+            config_content = config_yaml_env
+            
+            # If the content is wrapped in quotes, remove them
+            if (config_content.startswith('"') and config_content.endswith('"')) or \
+               (config_content.startswith("'") and config_content.endswith("'")):
+                config_content = config_content[1:-1]
+            
+            # Handle escaped quotes and newlines that might come from Railway
+            config_content = config_content.replace('\\"', '"').replace("\\'", "'")
+            config_content = config_content.replace('\\n', '\n').replace('\\t', '\t')
+            
+            config = yaml.safe_load(config_content)
             logger.info("Configuration loaded from CONFIG_YAML environment variable")
             
             # Validate required sections
