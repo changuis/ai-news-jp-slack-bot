@@ -1,0 +1,253 @@
+# AI News JP Slack Bot Configuration - 日本のAIニュース配信ボット
+# Copy this file to config.yaml and fill in your actual values
+
+# Slack Configuration
+slack:
+  bot_token: "xoxb-your-bot-token-here"
+  app_token: "xapp-your-app-token-here"  # For socket mode
+  signing_secret: "your-signing-secret-here"
+  channels:
+    main: "#times-mayo"  # Main channel for posting Japanese AI news
+    alerts: "#times-mayo"  # Channel for system alerts (same channel)
+  posting:
+    frequency: "daily"  # hourly, daily, weekly
+    max_articles_per_post: 5
+    summary_length: "medium"  # short, medium, long
+
+# OpenAI Configuration
+openai:
+  api_key: "sk-your-openai-api-key-here"
+  model: "gpt-4"
+  max_tokens: 500
+  temperature: 0.3
+  prompts:
+    japanese_summary: |
+      以下のAI関連記事を2-3文で要約してください。
+      主要な技術的発展とその影響に焦点を当て、日本語で簡潔にまとめてください：
+      
+      {article_text}
+    
+    japanese_tagging: |
+      以下の記事に適切な日本語タグを付けてください。
+      技術分野、企業名、研究機関、応用分野などを含めてください：
+      
+      {article_text}
+
+# News Sources Configuration - Japanese Only
+sources:
+  japanese:
+    rss_feeds:
+      # Major Japanese Tech News Sites
+      - name: "ITmedia AI+"
+        url: "https://www.itmedia.co.jp/aiplus/rss/news.xml"
+        enabled: true
+        tags: ["tech", "japanese", "ai", "itmedia"]
+      
+      - name: "ASCII.jp AI"
+        url: "https://ascii.jp/rss.xml"
+        enabled: true
+        tags: ["tech", "japanese", "ai", "ascii"]
+        filter_keywords: ["AI", "人工知能", "機械学習", "深層学習", "生成AI"]
+      
+      - name: "日経xTECH AI"
+        url: "https://xtech.nikkei.com/rss/index.rdf"
+        enabled: true
+        tags: ["business", "nikkei", "ai", "japanese"]
+        filter_keywords: ["AI", "人工知能", "機械学習", "DX", "デジタル変革"]
+      
+      - name: "Impress Watch AI"
+        url: "https://www.watch.impress.co.jp/data/rss/1.0/ipw/feed.rdf"
+        enabled: true
+        tags: ["tech", "impress", "ai", "japanese"]
+        filter_keywords: ["AI", "人工知能", "機械学習", "深層学習", "ChatGPT", "生成AI"]
+      
+      - name: "マイナビニュース AI"
+        url: "https://news.mynavi.jp/rss/techplus"
+        enabled: true
+        tags: ["tech", "mynavi", "ai", "japanese"]
+        filter_keywords: ["AI", "人工知能", "機械学習", "深層学習"]
+      
+      - name: "CNET Japan AI"
+        url: "https://japan.cnet.com/rss/index.rdf"
+        enabled: true
+        tags: ["tech", "cnet", "ai", "japanese"]
+        filter_keywords: ["AI", "人工知能", "機械学習", "ChatGPT", "生成AI"]
+      
+      - name: "ZDNet Japan AI"
+        url: "https://japan.zdnet.com/rss/index.rdf"
+        enabled: true
+        tags: ["business", "zdnet", "ai", "japanese"]
+        filter_keywords: ["AI", "人工知能", "機械学習", "DX"]
+      
+      - name: "週刊アスキー AI"
+        url: "https://weekly.ascii.jp/rss.xml"
+        enabled: true
+        tags: ["tech", "ascii", "ai", "japanese"]
+        filter_keywords: ["AI", "人工知能", "機械学習", "深層学習", "生成AI"]
+    
+    websites:
+      # Japanese AI Companies and Research Institutions
+      - name: "Preferred Networks Blog"
+        url: "https://preferred.jp/ja/news/"
+        selector: ".news-item"
+        enabled: true
+        tags: ["preferred", "research", "ai", "japanese", "company"]
+      
+      - name: "RIKEN AIP"
+        url: "https://aip.riken.jp/news/"
+        selector: ".news-list-item"
+        enabled: true
+        tags: ["riken", "research", "academic", "ai", "japanese"]
+      
+      - name: "リンナ株式会社"
+        url: "https://rinna.co.jp/news/"
+        selector: ".news-item"
+        enabled: true
+        tags: ["rinna", "company", "ai", "japanese", "nlp"]
+      
+      - name: "東京大学 AI研究"
+        url: "https://www.u-tokyo.ac.jp/focus/ja/topics/"
+        selector: ".topics-item"
+        enabled: true
+        tags: ["university", "tokyo", "research", "academic", "ai", "japanese"]
+        filter_keywords: ["AI", "人工知能", "機械学習", "データサイエンス"]
+    
+    social:
+      twitter_accounts:
+        - "@PreferredNet"      # Preferred Networks
+        - "@rinna_inc"         # rinna株式会社
+        - "@RIKEN_AIP"         # RIKEN AIP
+        - "@UTokyo_News"       # 東京大学
+        - "@SoftBank_News"     # ソフトバンク
+        - "@NTTcom_news"       # NTTコミュニケーションズ
+        - "@Fujitsu_Global"    # 富士通
+        - "@NEC_corp"          # NEC
+
+# Tagging Configuration - Japanese Focus
+tagging:
+  auto_tag: true
+  confidence_threshold: 0.7
+  
+  categories:
+    technology:
+      keywords: ["人工知能", "機械学習", "深層学習", "ニューラルネットワーク", "トランスフォーマー", "大規模言語モデル", "LLM", "生成AI", "ChatGPT", "GPT", "自然言語処理", "画像認識", "音声認識"]
+      weight: 1.0
+    
+    business:
+      keywords: ["スタートアップ", "資金調達", "投資", "IPO", "買収", "企業", "ビジネス", "DX", "デジタル変革", "デジタル化"]
+      weight: 0.8
+    
+    research:
+      keywords: ["研究", "論文", "大学", "学術", "理化学研究所", "産総研", "東大", "京大", "研究開発", "R&D"]
+      weight: 0.9
+    
+    companies:
+      keywords: ["プリファード", "リンナ", "ソフトバンク", "NTT", "富士通", "NEC", "パナソニック", "トヨタ", "ホンダ", "ソニー"]
+      weight: 0.8
+    
+    applications:
+      keywords: ["自動運転", "医療AI", "画像認識", "音声認識", "自然言語処理", "ロボット", "IoT", "スマートシティ", "フィンテック", "EdTech"]
+      weight: 0.7
+    
+    regulation:
+      keywords: ["規制", "政策", "政府", "法律", "倫理", "ガイドライン", "AI倫理", "プライバシー", "データ保護"]
+      weight: 0.7
+
+# Database Configuration
+database:
+  type: "sqlite"
+  path: "data/ai_news_jp.db"
+  backup:
+    enabled: true
+    frequency: "daily"
+    retention_days: 30
+
+# Collection Schedule - Japan Time
+schedule:
+  enabled: true
+  timezone: "Asia/Tokyo"
+  jobs:
+    - name: "morning_jp_collection"
+      cron: "0 9 * * 1-5"  # 9 AM Monday-Friday (weekdays only)
+      sources: ["rss_feeds", "websites", "social"]
+      languages: ["japanese"]
+    
+    - name: "afternoon_rss_check"
+      cron: "0 15 * * 1-5"  # 3 PM Monday-Friday for additional RSS check
+      sources: ["rss_feeds"]
+      languages: ["japanese"]
+    
+    - name: "weekly_cleanup"
+      cron: "0 2 * * 0"  # 2 AM every Sunday
+      task: "cleanup_old_articles"
+      retention_days: 30
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  files:
+    main: "logs/ai_news_jp_bot.log"
+    errors: "logs/errors.log"
+    collection: "logs/collection.log"
+  rotation:
+    max_size: "10MB"
+    backup_count: 5
+
+# Performance Settings
+performance:
+  max_concurrent_requests: 10
+  request_timeout: 30
+  retry_attempts: 3
+  retry_delay: 5
+  rate_limiting:
+    requests_per_minute: 60
+    burst_limit: 10
+
+# Content Filtering - Japanese Focus
+filtering:
+  min_article_length: 50  # Shorter for Japanese text
+  max_article_age_days: 7
+  duplicate_detection:
+    enabled: true
+    similarity_threshold: 0.8
+  
+  blocked_domains:
+    - "spam-site.com"
+    - "low-quality-news.com"
+  
+  required_keywords:
+    - "AI"
+    - "人工知能"
+    - "機械学習"
+    - "深層学習"
+    - "生成AI"
+    - "ChatGPT"
+    - "大規模言語モデル"
+    - "LLM"
+
+# Language Settings
+language:
+  default: "japanese"
+  supported: ["japanese"]  # Only Japanese
+  text_processing:
+    japanese:
+      encoding: "utf-8"
+      tokenizer: "mecab"  # Japanese morphological analyzer
+      stop_words: true
+
+# Notification Settings
+notifications:
+  email:
+    enabled: false
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587
+    username: "your-email@gmail.com"
+    password: "your-app-password"
+    recipients: ["admin@yourcompany.com"]
+  
+  slack_alerts:
+    enabled: true
+    error_threshold: 5  # Send alert after 5 consecutive errors
+    daily_summary: true
+    language: "japanese"  # Alerts in Japanese
