@@ -1,21 +1,21 @@
 #!/usr/bin/env sh
-set -e
+set -euo pipefail
 
-# Ensure the config dir exists
+# Ensure venv tools are reachable
+if [ -d "/opt/venv" ]; then
+  export PATH="/opt/venv/bin:$PATH"
+fi
+
+# Materialize config/config.yaml from env
 mkdir -p config
-
-# Prefer base64 to avoid YAML quoting issues
-if [ -n "$CONFIG_YAML_BASE64" ]; then
+if [ -n "${CONFIG_YAML_BASE64:-}" ]; then
   echo "$CONFIG_YAML_BASE64" | base64 -d > config/config.yaml
-elif [ -n "$CONFIG_YAML" ]; then
-  # Write raw YAML from the env var
-  # Use printf to preserve exact newlines
+elif [ -n "${CONFIG_YAML:-}" ]; then
   printf "%s" "$CONFIG_YAML" > config/config.yaml
 else
-  echo "Application error: CONFIG_YAML(_BASE64) not set; cannot create config/config.yaml" >&2
+  echo "Application error: CONFIG_YAML(_BASE64) not set" >&2
   exit 1
 fi
 
-# Start your web server (edit to match your app)
-# If you followed my earlier advice with FastAPI:
-exec uvicorn server:app --host 0.0.0.0 --port "${PORT:-8000}"
+# Start the web server (adjust module if needed)
+exec /opt/venv/bin/python -m uvicorn server:app --host 0.0.0.0 --port "${PORT:-8000}"
