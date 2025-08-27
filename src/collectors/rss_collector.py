@@ -24,11 +24,19 @@ class RSSCollector(BaseCollector):
         try:
             logger.info(f"Fetching RSS feed: {self.source.url}")
             
-            # Parse RSS feed
-            feed = feedparser.parse(self.source.url)
+            # Parse RSS feed with better error handling
+            try:
+                feed = feedparser.parse(self.source.url)
+            except Exception as e:
+                logger.error(f"Failed to parse RSS feed: {e}")
+                return []
             
             if feed.bozo:
                 logger.warning(f"RSS feed has parsing issues: {feed.bozo_exception}")
+                # If the feed is severely malformed, skip it
+                if not hasattr(feed, 'entries') or not feed.entries:
+                    logger.error("RSS feed is too malformed to process")
+                    return []
             
             # Get recent articles from database to avoid processing duplicates
             from ..database.models import DatabaseManager
@@ -128,21 +136,31 @@ class RSSCollector(BaseCollector):
             if hasattr(entry, field):
                 field_value = getattr(entry, field)
                 
-                if isinstance(field_value, list) and field_value:
-                    # Handle content field which is usually a list
-                    if hasattr(field_value[0], 'value'):
-                        content = field_value[0].value
-                    elif hasattr(field_value[0], 'get'):
-                        content = field_value[0].get('value', '')
+                try:
+                    if isinstance(field_value, list) and field_value:
+                        # Handle content field which is usually a list
+                        content_item = field_value[0]
+                        if hasattr(content_item, 'value'):
+                            content = content_item.value
+                        elif isinstance(content_item, dict):
+                            content = content_item.get('value', str(content_item))
+                        else:
+                            content = str(content_item)
+                    elif isinstance(field_value, str):
+                        content = field_value
+                    elif hasattr(field_value, 'value'):
+                        content = field_value.value
+                    elif isinstance(field_value, dict):
+                        content = field_value.get('value', str(field_value))
                     else:
-                        content = str(field_value[0])
-                elif isinstance(field_value, str):
-                    content = field_value
-                elif hasattr(field_value, 'value'):
-                    content = field_value.value
-                
-                if content:
-                    break
+                        content = str(field_value)
+                    
+                    if content:
+                        break
+                        
+                except Exception as e:
+                    logger.debug(f"Failed to extract content from field {field}: {e}")
+                    continue
         
         # Clean HTML if present
         if content:

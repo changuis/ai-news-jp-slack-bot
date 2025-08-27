@@ -209,12 +209,23 @@ class BaseCollector(ABC):
         if not date_str:
             return None
         
-        # Common date formats
+        # Clean the date string
+        date_str = date_str.strip()
+        
+        # Try using dateutil parser first (handles most ISO formats including timezones)
+        try:
+            from dateutil import parser as dateutil_parser
+            return dateutil_parser.parse(date_str)
+        except Exception:
+            pass
+        
+        # Fallback to manual parsing for common formats
         formats = [
             '%Y-%m-%d %H:%M:%S',
             '%Y-%m-%dT%H:%M:%S',
             '%Y-%m-%dT%H:%M:%SZ',
             '%Y-%m-%dT%H:%M:%S.%fZ',
+            '%Y-%m-%dT%H:%M:%S%z',  # Added timezone format
             '%a, %d %b %Y %H:%M:%S %Z',
             '%a, %d %b %Y %H:%M:%S %z',
             '%d %b %Y %H:%M:%S',
@@ -223,7 +234,7 @@ class BaseCollector(ABC):
         
         for fmt in formats:
             try:
-                return datetime.strptime(date_str.strip(), fmt)
+                return datetime.strptime(date_str, fmt)
             except ValueError:
                 continue
         
