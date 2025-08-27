@@ -41,7 +41,7 @@ class AINewsSlackBot:
         # Configuration
         self.main_channel = self.config.get('channels', {}).get('main', '#ai-news')
         self.alerts_channel = self.config.get('channels', {}).get('alerts', '#ai-news-alerts')
-        self.max_articles_per_post = self.config.get('posting', {}).get('max_articles_per_post', 5)
+        # Removed max_articles_per_post restriction
         
     def start_socket_mode(self):
         """Start socket mode for real-time interactions"""
@@ -450,8 +450,8 @@ class AINewsSlackBot:
                 logger.info("No articles to post")
                 return True
             
-            # Limit articles per post
-            articles_to_post = articles[:self.max_articles_per_post]
+            # Post all articles without limit
+            articles_to_post = articles
             
             # Format articles
             blocks = self._format_articles_summary(articles_to_post, title)
